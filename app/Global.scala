@@ -1,8 +1,8 @@
 import models.User
-import org.apache.shiro.mgt.{DefaultSubjectFactory, DefaultSessionStorageEvaluator, DefaultSubjectDAO, DefaultSecurityManager}
+import org.apache.shiro.mgt.{DefaultSessionStorageEvaluator, DefaultSubjectDAO}
 import play.api._
 
-import play.api.mvc.{Handler, RequestHeader}
+import play.api.mvc.{WithFilters, Handler, RequestHeader}
 import security._
 
 /**
@@ -10,7 +10,7 @@ import security._
  * @author wsargent
  * @since 1/8/12
  */
-object Global extends GlobalSettings {
+object Global extends WithFilters(BasicAuthenticationFilter()) with GlobalSettings {
 
   override def onStart(app: Application) {
     ShiroConfig.initialize()
