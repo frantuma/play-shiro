@@ -54,7 +54,6 @@ class PlayRealm extends AuthorizingRealm {
 
   def doGetAuthorizationInfo(principals: PrincipalCollection):AuthorizationInfo = {
     //checkNotNull(principals, "PrincipalCollection method argument cannot be null.")
-
     import scala.collection.JavaConversions._
     val username = principals.getPrimaryPrincipal.asInstanceOf[String]
     val info = new SimpleAuthorizationInfo(rolesOf(username))
@@ -62,7 +61,17 @@ class PlayRealm extends AuthorizingRealm {
     info
   }
 
-  private def permissionsOf(username:String):Set[String] = Set()
+  private def permissionsOf(username:String):Set[String] = {
+    username match {
+      //case "admin@example.org" => Set("user:create,read,update,delete")
+      case "admin@example.com" => {
+        Set("read")
+      }
+      case _ => {
+        Set.empty
+      }
+    }
+  }
 
   private def rolesOf(username:String):Set[String] = {
     username match {

@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           controllers.Application.index()
+GET     /java                       controllers.JavaApp.index()
 POST    /logout                     controllers.Application.logout()
 
 GET     /login                      controllers.Login.index()

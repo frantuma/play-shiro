@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigValueType
 
 import models.User
 import org.apache.commons.codec.binary.Base64
+import org.apache.shiro.SecurityUtils
 
 import play.api.Configuration
 import play.api.http.HeaderNames.AUTHORIZATION
@@ -35,11 +36,13 @@ class BasicAuthenticationFilter(configurationFactory: => BasicAuthenticationFilt
   private def isNotExcluded(requestHeader: RequestHeader): Boolean =
     !configuration.excluded.exists( requestHeader.path matches _ )
 
-  private def checkAuthentication(requestHeader: RequestHeader, next: RequestHeader => Future[Result]): Future[Result] =
+  private def checkAuthentication(requestHeader: RequestHeader, next: RequestHeader => Future[Result]): Future[Result] = {
+    SecurityUtils.getSubject.logout()
     if (isAuthorized(requestHeader)){
       addCookie(next(requestHeader), buildCookieValue(requestHeader))
     }
     else unauthorizedResult
+  }
 
   private def isAuthorized(requestHeader: RequestHeader) = {
     // get username from auth or cookie
