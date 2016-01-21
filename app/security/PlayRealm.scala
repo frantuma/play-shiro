@@ -6,6 +6,7 @@ import org.apache.shiro.authc.credential._
 import org.apache.shiro.subject._
 import org.apache.shiro.authz._
 
+import scala.collection.JavaConverters._
 import models.User
 
 /**
@@ -24,14 +25,14 @@ class PlayRealm extends AuthorizingRealm {
     val username = upToken.getUsername
     checkNotNull(username, "Null usernames are not allowed by this realm.")
 
+    // retrieve the user
+    val user = User.findByEmail(username)
+    checkNotNull(user.getOrElse(null), "No account found for user [" + username + "]")
     // retrieve the 'real' user password
-    val password = passwordOf(username)
-
-    checkNotNull(password, "No account found for user [" + username + "]")
-
+    val password = passwordOf(user)
     // return the 'real' info for username, security manager is then responsible
     // for checking the token against the provided info
-    new SimpleAuthenticationInfo(username, password, getName)
+    new SimpleAuthenticationInfo(user.get, password, getName)
   }
 
   override def getCredentialsMatcher = new CredentialsMatcher() {
@@ -45,32 +46,19 @@ class PlayRealm extends AuthorizingRealm {
     }
   }
 
-  private def passwordOf(username:String) : String = {
-    User.findByEmail(username) match {
-      case Some(user) => user.password
+  private def passwordOf(user:Option[User]) : String = {
+    user match {
+      case Some(aUser) => aUser.password
       case None => null
     }
   }
 
   def doGetAuthorizationInfo(principals: PrincipalCollection):AuthorizationInfo = {
     //checkNotNull(principals, "PrincipalCollection method argument cannot be null.")
-    import scala.collection.JavaConversions._
-    val username = principals.getPrimaryPrincipal.asInstanceOf[String]
-    val info = new SimpleAuthorizationInfo(rolesOf(username))
-    info.setStringPermissions(permissionsOf(username))
+    val user = principals.getPrimaryPrincipal.asInstanceOf[User]
+    val info = new SimpleAuthorizationInfo(user.roles.toSet.asJava)
+    //info.setStringPermissions(permissionsOf(user)) TODO
     info
-  }
-
-  private def permissionsOf(username:String):Set[String] = {
-    username match {
-      //case "admin@example.org" => Set("user:create,read,update,delete")
-      case "admin@example.com" => {
-        Set("read")
-      }
-      case _ => {
-        Set.empty
-      }
-    }
   }
 
   private def rolesOf(username:String):Set[String] = {
@@ -80,7 +68,7 @@ class PlayRealm extends AuthorizingRealm {
     }
   }
 
-  private def checkNotNull(reference: String, message: String) {
+  private def checkNotNull(reference: Any, message: String) {
     if (reference == null) {
       throw new AuthenticationException(message)
     }

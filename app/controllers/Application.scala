@@ -18,8 +18,13 @@ object Application extends Controller with Authentication {
       if (!SecurityUtils.getSubject().isAuthenticated){
         Logger.error("NOT AUTHENTICATED ")
       }
+
+      // demonstrate use of shiro roles handling (no annotations)
+      if (!SecurityUtils.getSubject().hasRole("ROLE_ADMIN")){ // as defined in Global initial data
+        Logger.error("NOT ROLE")
+      }
       // maintains previous proof of concept level user management/loading
-      Ok(views.html.index(User.findAll, currentUserByEmail(SecurityUtils.getSubject.getPrincipal.asInstanceOf[String])))
+      Ok(views.html.index(User.findAll, Option(SecurityUtils.getSubject.getPrincipal.asInstanceOf[User])))
     }
   }
   
@@ -39,11 +44,5 @@ trait Authentication {
    * Retrieve the connected user email.
    */
   def authToken(request: RequestHeader) = request.session.get("email")
-
-  // not used in this version, where currentUserByEmail is used
-  def currentUser(implicit request: RequestHeader) : Option[User] = authToken(request).flatMap { User.findByEmail(_) }
-
-  // same as currentUser but gets email from shiro principal
-  def currentUserByEmail(email: String) : Option[User] = User.findByEmail(email)
 
 }

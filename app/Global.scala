@@ -53,7 +53,7 @@ object InitialData {
 
       Seq(
         User("admin@example.com", "admin")
-      ).foreach(User.create)
+      ).foreach(User.create(_, Seq("ROLE_ADMIN", "ROLE_USER"), Seq("read")))
     }
 
   }
